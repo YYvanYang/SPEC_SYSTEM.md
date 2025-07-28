@@ -27,6 +27,7 @@
     "quality:check": "npm run lint && npm run type-check && npm run test:unit",
     "quality:full": "npm run quality:check && npm run test:integration && npm run test:e2e",
     "build": "npm run quality:full && npm run docs:generate",
+    "build:worker": "cd worker && npm run build",
     "deploy:staging": "wrangler publish --env staging",
     "deploy:production": "wrangler publish --env production",
     "setup": "npm install && npm run agents:validate && npm run workflows:validate",

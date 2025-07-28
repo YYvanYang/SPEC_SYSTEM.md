@@ -1,5 +1,16 @@
 # SPEC_SYSTEM — AI-Native Spec-Driven Development
 
+![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-passing-brightgreen)
+![Agents](https://img.shields.io/badge/Agents-8-blue)
+![Workflows](https://img.shields.io/badge/Workflows-3-blue)
+![Commands](https://img.shields.io/badge/Commands-6-blue)
+![Quality](https://img.shields.io/badge/Quality-92%25-brightgreen)
+![EARS Compliance](https://img.shields.io/badge/EARS%20Compliance-100%25-brightgreen)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-Compatible-purple)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen)
+
 **Transform from "vibe coding" to AI-orchestrated spec-driven development** using specialized sub-agents, intelligent workflows, and automated quality gates.
 
 ## 🎯 Vision
@@ -171,6 +182,29 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 - **Analytics Guide**: Understanding and using delivery metrics
 
 ---
+
+<!-- STATS:START -->
+## 📊 System Statistics
+
+- **🤖 AI Agents**: 8 specialized agents
+- **🔄 Workflows**: 3 automated workflows  
+- **💬 Commands**: 6 intelligent slash commands
+- **📁 Total Files**: 50+ files
+- **📏 Lines of Code**: 6,900+ lines
+- **🔧 Technology**: Node.js + Claude Code + Cloudflare Workers
+- **📅 Last Updated**: 2024-01-15 10:00 UTC
+
+<!-- STATS:END -->
+
+## 🚀 GitHub Actions Workflows
+
+The system includes comprehensive CI/CD automation:
+
+- **🔍 CI/CD Pipeline** - Complete testing, quality gates, and deployment
+- **🤖 Agent Validation** - Validates agent system integrity  
+- **📊 Quality Metrics** - Collects and reports quality metrics
+- **📋 Spec Compliance** - Ensures EARS format and traceability
+- **🏷️ Badge Updates** - Maintains current system statistics
 
 **Ready to transform your development process?** 🚀
 

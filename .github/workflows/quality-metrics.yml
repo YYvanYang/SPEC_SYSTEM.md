@@ -1,0 +1,426 @@
+name: Quality Metrics Collection
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  collect-quality-metrics:
+    name: Collect Quality Metrics
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for trend analysis
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        npm ci
+        pip install radon complexity pyyaml
+        
+    - name: Collect Code Quality Metrics
+      run: |
+        echo "📊 Collecting code quality metrics..."
+        
+        # Create metrics output directory
+        mkdir -p metrics-report
+        
+        # Code complexity analysis
+        echo "🔍 Analyzing code complexity..."
+        radon cc scripts/ --json > metrics-report/complexity.json || echo "No Python files found"
+        
+        # Count lines of code
+        echo "📏 Counting lines of code..."
+        {
+          echo "## Lines of Code Analysis"
+          echo ""
+          echo "### By File Type"
+          echo "| Type | Files | Lines | Percentage |"
+          echo "|------|-------|-------|------------|"
+          
+          total_lines=0
+          
+          # JavaScript files
+          js_files=$(find . -name "*.js" -not -path "./node_modules/*" | wc -l)
+          js_lines=$(find . -name "*.js" -not -path "./node_modules/*" -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+          total_lines=$((total_lines + js_lines))
+          
+          # Markdown files
+          md_files=$(find . -name "*.md" -not -path "./node_modules/*" | wc -l)
+          md_lines=$(find . -name "*.md" -not -path "./node_modules/*" -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+          total_lines=$((total_lines + md_lines))
+          
+          # YAML files
+          yml_files=$(find . -name "*.yml" -o -name "*.yaml" -not -path "./node_modules/*" | wc -l)
+          yml_lines=$(find . \( -name "*.yml" -o -name "*.yaml" \) -not -path "./node_modules/*" -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+          total_lines=$((total_lines + yml_lines))
+          
+          # Python files
+          py_files=$(find . -name "*.py" -not -path "./node_modules/*" | wc -l)
+          py_lines=$(find . -name "*.py" -not -path "./node_modules/*" -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}' || echo "0")
+          total_lines=$((total_lines + py_lines))
+          
+          # Calculate percentages and output
+          if [ $total_lines -gt 0 ]; then
+            js_pct=$(echo "scale=1; $js_lines * 100 / $total_lines" | bc -l 2>/dev/null || echo "0.0")
+            md_pct=$(echo "scale=1; $md_lines * 100 / $total_lines" | bc -l 2>/dev/null || echo "0.0")
+            yml_pct=$(echo "scale=1; $yml_lines * 100 / $total_lines" | bc -l 2>/dev/null || echo "0.0")
+            py_pct=$(echo "scale=1; $py_lines * 100 / $total_lines" | bc -l 2>/dev/null || echo "0.0")
+          else
+            js_pct="0.0"; md_pct="0.0"; yml_pct="0.0"; py_pct="0.0"
+          fi
+          
+          echo "| JavaScript | $js_files | $js_lines | ${js_pct}% |"
+          echo "| Markdown | $md_files | $md_lines | ${md_pct}% |"
+          echo "| YAML | $yml_files | $yml_lines | ${yml_pct}% |"
+          echo "| Python | $py_files | $py_lines | ${py_pct}% |"
+          echo "| **Total** | **$((js_files + md_files + yml_files + py_files))** | **$total_lines** | **100%** |"
+          echo ""
+          
+        } > metrics-report/code-analysis.md
+        
+    - name: Analyze Agent System Quality
+      run: |
+        echo "🤖 Analyzing agent system quality..."
+        
+        python3 << 'EOF'
+        import os
+        import yaml
+        import json
+        from datetime import datetime
+        
+        def analyze_agent_quality():
+            agents_dir = '.claude/agents'
+            agents_analysis = {
+                'total_agents': 0,
+                'agents_with_description': 0,
+                'agents_with_specialization': 0,
+                'average_description_length': 0,
+                'specialization_coverage': set(),
+                'agents': {}
+            }
+            
+            description_lengths = []
+            
+            for filename in os.listdir(agents_dir):
+                if filename.endswith('.md'):
+                    agents_analysis['total_agents'] += 1
+                    agent_name = filename[:-3]
+                    
+                    with open(os.path.join(agents_dir, filename), 'r') as f:
+                        content = f.read()
+                    
+                    agent_info = {'has_description': False, 'has_specialization': False}
+                    
+                    # Extract YAML frontmatter
+                    if content.startswith('---\n'):
+                        yaml_end = content.find('\n---\n', 4)
+                        if yaml_end != -1:
+                            yaml_content = content[4:yaml_end]
+                            try:
+                                metadata = yaml.safe_load(yaml_content)
+                                
+                                if 'description' in metadata:
+                                    agents_analysis['agents_with_description'] += 1
+                                    agent_info['has_description'] = True
+                                    description_lengths.append(len(metadata['description']))
+                                
+                                if 'specialization' in metadata:
+                                    agents_analysis['agents_with_specialization'] += 1
+                                    agent_info['has_specialization'] = True
+                                    specs = metadata['specialization'].split(', ')
+                                    agents_analysis['specialization_coverage'].update(specs)
+                                    
+                            except yaml.YAMLError:
+                                pass
+                    
+                    agents_analysis['agents'][agent_name] = agent_info
+            
+            if description_lengths:
+                agents_analysis['average_description_length'] = sum(description_lengths) / len(description_lengths)
+            
+            agents_analysis['specialization_coverage'] = list(agents_analysis['specialization_coverage'])
+            
+            return agents_analysis
+        
+        def analyze_workflow_quality():
+            workflows_dir = '.claude/workflows'
+            workflows_analysis = {
+                'total_workflows': 0,
+                'workflows_with_phases': 0,
+                'workflows_with_quality_gates': 0,
+                'total_phases': 0,
+                'total_agents_referenced': 0,
+                'workflows': {}
+            }
+            
+            for filename in os.listdir(workflows_dir):
+                if filename.endswith('.yml') or filename.endswith('.yaml'):
+                    workflows_analysis['total_workflows'] += 1
+                    workflow_name = filename.split('.')[0]
+                    
+                    with open(os.path.join(workflows_dir, filename), 'r') as f:
+                        try:
+                            workflow_data = yaml.safe_load(f)
+                            
+                            workflow_info = {
+                                'has_phases': False,
+                                'has_quality_gates': False,
+                                'phase_count': 0,
+                                'agent_count': 0
+                            }
+                            
+                            if 'phases' in workflow_data:
+                                workflows_analysis['workflows_with_phases'] += 1
+                                workflow_info['has_phases'] = True
+                                workflow_info['phase_count'] = len(workflow_data['phases'])
+                                workflows_analysis['total_phases'] += workflow_info['phase_count']
+                                
+                                # Count agent references
+                                for phase_name, phase_data in workflow_data['phases'].items():
+                                    if 'agents' in phase_data:
+                                        workflow_info['agent_count'] += len(phase_data['agents'])
+                                        workflows_analysis['total_agents_referenced'] += len(phase_data['agents'])
+                            
+                            if 'quality-gates' in str(workflow_data):
+                                workflows_analysis['workflows_with_quality_gates'] += 1
+                                workflow_info['has_quality_gates'] = True
+                            
+                            workflows_analysis['workflows'][workflow_name] = workflow_info
+                            
+                        except yaml.YAMLError:
+                            pass
+            
+            return workflows_analysis
+        
+        # Generate quality report
+        agent_quality = analyze_agent_quality()
+        workflow_quality = analyze_workflow_quality()
+        
+        report = {
+            'timestamp': datetime.now().isoformat(),
+            'agents': agent_quality,
+            'workflows': workflow_quality,
+            'quality_score': {
+                'agent_completeness': (agent_quality['agents_with_description'] / max(agent_quality['total_agents'], 1)) * 100,
+                'specialization_coverage': (agent_quality['agents_with_specialization'] / max(agent_quality['total_agents'], 1)) * 100,
+                'workflow_completeness': (workflow_quality['workflows_with_phases'] / max(workflow_quality['total_workflows'], 1)) * 100,
+            }
+        }
+        
+        # Calculate overall quality score
+        scores = list(report['quality_score'].values())
+        report['overall_quality_score'] = sum(scores) / len(scores) if scores else 0
+        
+        # Save detailed report
+        with open('metrics-report/agent-system-quality.json', 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        # Generate markdown summary
+        with open('metrics-report/quality-summary.md', 'w') as f:
+            f.write("## 🎯 Agent System Quality Report\n\n")
+            f.write(f"**Overall Quality Score**: {report['overall_quality_score']:.1f}%\n\n")
+            
+            f.write("### 🤖 Agent Analysis\n")
+            f.write(f"- **Total Agents**: {agent_quality['total_agents']}\n")
+            f.write(f"- **Agents with Descriptions**: {agent_quality['agents_with_description']} ({report['quality_score']['agent_completeness']:.1f}%)\n")
+            f.write(f"- **Agents with Specializations**: {agent_quality['agents_with_specialization']} ({report['quality_score']['specialization_coverage']:.1f}%)\n")
+            f.write(f"- **Average Description Length**: {agent_quality['average_description_length']:.0f} characters\n")
+            f.write(f"- **Specialization Areas**: {len(agent_quality['specialization_coverage'])}\n\n")
+            
+            f.write("### 🔄 Workflow Analysis\n")
+            f.write(f"- **Total Workflows**: {workflow_quality['total_workflows']}\n")
+            f.write(f"- **Workflows with Phases**: {workflow_quality['workflows_with_phases']} ({report['quality_score']['workflow_completeness']:.1f}%)\n")
+            f.write(f"- **Workflows with Quality Gates**: {workflow_quality['workflows_with_quality_gates']}\n")
+            f.write(f"- **Total Phases**: {workflow_quality['total_phases']}\n")
+            f.write(f"- **Total Agent References**: {workflow_quality['total_agents_referenced']}\n\n")
+            
+            f.write("### 📈 Quality Trends\n")
+            if report['overall_quality_score'] >= 90:
+                f.write("🟢 **EXCELLENT** - System quality is exceptional\n")
+            elif report['overall_quality_score'] >= 80:
+                f.write("🟡 **GOOD** - System quality is solid with room for improvement\n")
+            elif report['overall_quality_score'] >= 70:
+                f.write("🟠 **FAIR** - System quality needs attention\n")
+            else:
+                f.write("🔴 **NEEDS IMPROVEMENT** - System quality requires immediate attention\n")
+        
+        print("✅ Agent system quality analysis completed")
+        EOF
+        
+    - name: Generate Documentation Coverage Report
+      run: |
+        echo "📚 Analyzing documentation coverage..."
+        
+        python3 << 'EOF'
+        import os
+        import re
+        
+        def analyze_documentation():
+            docs_analysis = {
+                'total_md_files': 0,
+                'files_with_headers': 0,
+                'files_with_examples': 0,
+                'files_with_toc': 0,
+                'average_file_length': 0,
+                'documentation_score': 0
+            }
+            
+            file_lengths = []
+            
+            # Analyze markdown files
+            for root, dirs, files in os.walk('.'):
+                # Skip node_modules and .git
+                dirs[:] = [d for d in dirs if d not in ['node_modules', '.git']]
+                
+                for file in files:
+                    if file.endswith('.md'):
+                        docs_analysis['total_md_files'] += 1
+                        filepath = os.path.join(root, file)
+                        
+                        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                            content = f.read()
+                            file_lengths.append(len(content))
+                        
+                        # Check for headers
+                        if re.search(r'^#{1,6}\s+', content, re.MULTILINE):
+                            docs_analysis['files_with_headers'] += 1
+                        
+                        # Check for examples (code blocks)
+                        if re.search(r'```', content):
+                            docs_analysis['files_with_examples'] += 1
+                        
+                        # Check for table of contents
+                        if re.search(r'table of contents|toc', content.lower()):
+                            docs_analysis['files_with_toc'] += 1
+            
+            if file_lengths:
+                docs_analysis['average_file_length'] = sum(file_lengths) / len(file_lengths)
+            
+            # Calculate documentation score
+            if docs_analysis['total_md_files'] > 0:
+                header_score = (docs_analysis['files_with_headers'] / docs_analysis['total_md_files']) * 100
+                example_score = (docs_analysis['files_with_examples'] / docs_analysis['total_md_files']) * 100
+                docs_analysis['documentation_score'] = (header_score + example_score) / 2
+            
+            return docs_analysis
+        
+        docs_analysis = analyze_documentation()
+        
+        # Generate documentation report
+        with open('metrics-report/documentation-coverage.md', 'w') as f:
+            f.write("## 📚 Documentation Coverage Report\n\n")
+            f.write(f"**Documentation Score**: {docs_analysis['documentation_score']:.1f}%\n\n")
+            
+            f.write("### 📄 File Analysis\n")
+            f.write(f"- **Total Markdown Files**: {docs_analysis['total_md_files']}\n")
+            f.write(f"- **Files with Headers**: {docs_analysis['files_with_headers']} ({(docs_analysis['files_with_headers']/max(docs_analysis['total_md_files'],1)*100):.1f}%)\n")
+            f.write(f"- **Files with Examples**: {docs_analysis['files_with_examples']} ({(docs_analysis['files_with_examples']/max(docs_analysis['total_md_files'],1)*100):.1f}%)\n")
+            f.write(f"- **Files with TOC**: {docs_analysis['files_with_toc']}\n")
+            f.write(f"- **Average File Length**: {docs_analysis['average_file_length']:.0f} characters\n\n")
+            
+            if docs_analysis['documentation_score'] >= 80:
+                f.write("🟢 **EXCELLENT** - Documentation coverage is comprehensive\n")
+            elif docs_analysis['documentation_score'] >= 60:
+                f.write("🟡 **GOOD** - Documentation coverage is adequate\n")
+            else:
+                f.write("🔴 **NEEDS IMPROVEMENT** - Documentation coverage is insufficient\n")
+        
+        print("✅ Documentation coverage analysis completed")
+        EOF
+        
+    - name: Upload Quality Reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-metrics-report
+        path: metrics-report/
+        retention-days: 30
+        
+    - name: Comment PR with Quality Report
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read quality summary
+          let qualitySummary = '';
+          try {
+            qualitySummary = fs.readFileSync('metrics-report/quality-summary.md', 'utf8');
+          } catch (e) {
+            qualitySummary = '📊 Quality metrics report not available';
+          }
+          
+          // Read documentation coverage
+          let docsCoverage = '';
+          try {
+            docsCoverage = fs.readFileSync('metrics-report/documentation-coverage.md', 'utf8');
+          } catch (e) {
+            docsCoverage = '📚 Documentation coverage report not available';
+          }
+          
+          const comment = `## 📊 Quality Metrics Report
+          
+          ${qualitySummary}
+          
+          ${docsCoverage}
+          
+          ---
+          *This report was automatically generated by the Quality Metrics workflow*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+          
+    - name: Update Quality Badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "🏷️ Updating quality badge..."
+        
+        # Extract overall quality score
+        quality_score=$(python3 -c "
+        import json
+        try:
+            with open('metrics-report/agent-system-quality.json', 'r') as f:
+                data = json.load(f)
+                print(f\"{data['overall_quality_score']:.0f}\")
+        except:
+            print('0')
+        ")
+        
+        # Determine badge color
+        if [ "$quality_score" -ge 90 ]; then
+            color="brightgreen"
+        elif [ "$quality_score" -ge 80 ]; then
+            color="green"
+        elif [ "$quality_score" -ge 70 ]; then
+            color="yellow"
+        else
+            color="red"
+        fi
+        
+        echo "Quality Score: $quality_score% (Color: $color)"
+        
+        # In a real implementation, you would update a badge service
+        # or commit a badge file to the repository

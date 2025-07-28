@@ -1,0 +1,326 @@
+name: Agent System Validation
+
+on:
+  push:
+    paths:
+      - '.claude/agents/**'
+      - '.claude/workflows/**'
+      - '.claude/commands/**'
+      - '.claude/contexts/**'
+  pull_request:
+    paths:
+      - '.claude/agents/**'
+      - '.claude/workflows/**'
+      - '.claude/commands/**'
+      - '.claude/contexts/**'
+
+jobs:
+  validate-agents:
+    name: Validate Agent System
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install validation tools
+      run: |
+        pip install yamllint pyyaml jsonschema
+        
+    - name: Validate Agent Definitions
+      run: |
+        echo "🤖 Validating all agent definitions..."
+        
+        # Check that all required agents exist
+        required_agents=(
+          "steering-architect"
+          "feature-planner"
+          "design-architect"
+          "requirements-engineer"
+          "implementation-specialist"
+          "test-strategist"
+          "quality-guardian"
+          "documentation-curator"
+          "metrics-analyst"
+        )
+        
+        for agent in "${required_agents[@]}"; do
+          if [ ! -f ".claude/agents/${agent}.md" ]; then
+            echo "❌ Missing required agent: ${agent}.md"
+            exit 1
+          else
+            echo "✅ Found agent: ${agent}.md"
+          fi
+        done
+        
+    - name: Validate Agent Structure
+      run: |
+        echo "📋 Validating agent structure and metadata..."
+        
+        for agent_file in .claude/agents/*.md; do
+          if [ -f "$agent_file" ]; then
+            agent_name=$(basename "$agent_file" .md)
+            echo "Validating structure of: $agent_name"
+            
+            # Check YAML frontmatter exists
+            if ! head -20 "$agent_file" | grep -q "^---$"; then
+              echo "❌ Missing YAML frontmatter in $agent_file"
+              exit 1
+            fi
+            
+            # Extract and validate YAML frontmatter
+            awk '/^---$/{flag++} flag==1 && flag<3' "$agent_file" > "/tmp/${agent_name}_meta.yml"
+            
+            # Check required fields
+            if ! grep -q "^name:" "/tmp/${agent_name}_meta.yml"; then
+              echo "❌ Missing 'name' field in $agent_file"
+              exit 1
+            fi
+            
+            if ! grep -q "^description:" "/tmp/${agent_name}_meta.yml"; then
+              echo "❌ Missing 'description' field in $agent_file"
+              exit 1
+            fi
+            
+            if ! grep -q "^specialization:" "/tmp/${agent_name}_meta.yml"; then
+              echo "❌ Missing 'specialization' field in $agent_file"
+              exit 1
+            fi
+            
+            # Validate YAML syntax
+            yamllint "/tmp/${agent_name}_meta.yml" || {
+              echo "❌ Invalid YAML syntax in $agent_file frontmatter"
+              exit 1
+            }
+            
+            echo "✅ Agent $agent_name structure is valid"
+          fi
+        done
+        
+    - name: Validate Workflow Definitions
+      run: |
+        echo "🔄 Validating workflow definitions..."
+        
+        required_workflows=(
+          "feature-lifecycle"
+          "quality-gates"
+          "metrics-collection"
+        )
+        
+        for workflow in "${required_workflows[@]}"; do
+          workflow_file=".claude/workflows/${workflow}.yml"
+          if [ ! -f "$workflow_file" ]; then
+            echo "❌ Missing required workflow: ${workflow}.yml"
+            exit 1
+          fi
+          
+          echo "Validating workflow: $workflow"
+          
+          # Validate YAML syntax
+          yamllint "$workflow_file" || {
+            echo "❌ Invalid YAML syntax in $workflow_file"
+            exit 1
+          }
+          
+          # Check required sections
+          if ! grep -q "^name:" "$workflow_file"; then
+            echo "❌ Missing 'name' field in $workflow_file"
+            exit 1
+          fi
+          
+          if ! grep -q "^phases:" "$workflow_file"; then
+            echo "❌ Missing 'phases' section in $workflow_file"
+            exit 1
+          fi
+          
+          echo "✅ Workflow $workflow is valid"
+        done
+        
+    - name: Validate Commands
+      run: |
+        echo "💬 Validating slash commands..."
+        
+        required_commands=(
+          "plan-feature"
+          "implement-task"
+          "review-ready"
+          "spec-init"
+          "spec-lint"
+          "analytics-dashboard"
+        )
+        
+        for command in "${required_commands[@]}"; do
+          command_file=".claude/commands/${command}.md"
+          if [ ! -f "$command_file" ]; then
+            echo "❌ Missing required command: ${command}.md"
+            exit 1
+          fi
+          
+          echo "Validating command: $command"
+          
+          # Check command has proper structure
+          if ! grep -q "^# /${command}" "$command_file"; then
+            echo "❌ Missing proper command header in $command_file"
+            exit 1
+          fi
+          
+          if ! grep -q "## Usage" "$command_file"; then
+            echo "❌ Missing Usage section in $command_file"
+            exit 1
+          fi
+          
+          echo "✅ Command $command is valid"
+        done
+        
+    - name: Validate Context Definitions
+      run: |
+        echo "🧠 Validating context definitions..."
+        
+        required_contexts=(
+          "project-context"
+          "feature-context"
+          "task-context"
+        )
+        
+        for context in "${required_contexts[@]}"; do
+          context_file=".claude/contexts/${context}.yml"
+          if [ ! -f "$context_file" ]; then
+            echo "❌ Missing required context: ${context}.yml"
+            exit 1
+          fi
+          
+          echo "Validating context: $context"
+          
+          # Validate YAML syntax
+          yamllint "$context_file" || {
+            echo "❌ Invalid YAML syntax in $context_file"
+            exit 1
+          }
+          
+          # Check required fields
+          if ! grep -q "^name:" "$context_file"; then
+            echo "❌ Missing 'name' field in $context_file"
+            exit 1
+          fi
+          
+          if ! grep -q "^agents:" "$context_file"; then
+            echo "❌ Missing 'agents' field in $context_file"
+            exit 1
+          fi
+          
+          echo "✅ Context $context is valid"
+        done
+        
+    - name: Agent Compatibility Check
+      run: |
+        echo "🔗 Checking agent system compatibility..."
+        
+        # Create a simple compatibility matrix
+        python3 << 'EOF'
+        import yaml
+        import os
+        
+        # Load all agent metadata
+        agents = {}
+        for agent_file in os.listdir('.claude/agents'):
+            if agent_file.endswith('.md'):
+                agent_name = agent_file[:-3]
+                with open(f'.claude/agents/{agent_file}', 'r') as f:
+                    content = f.read()
+                    
+                # Extract YAML frontmatter
+                if content.startswith('---\n'):
+                    yaml_end = content.find('\n---\n', 4)
+                    if yaml_end != -1:
+                        yaml_content = content[4:yaml_end]
+                        try:
+                            agents[agent_name] = yaml.safe_load(yaml_content)
+                        except yaml.YAMLError as e:
+                            print(f"❌ YAML error in {agent_file}: {e}")
+                            exit(1)
+        
+        # Load workflow definitions
+        workflows = {}
+        for workflow_file in os.listdir('.claude/workflows'):
+            if workflow_file.endswith('.yml'):
+                workflow_name = workflow_file[:-4]
+                with open(f'.claude/workflows/{workflow_file}', 'r') as f:
+                    try:
+                        workflows[workflow_name] = yaml.safe_load(f)
+                    except yaml.YAMLError as e:
+                        print(f"❌ YAML error in {workflow_file}: {e}")
+                        exit(1)
+        
+        print(f"✅ Loaded {len(agents)} agents and {len(workflows)} workflows")
+        
+        # Check that workflow references valid agents
+        for workflow_name, workflow_data in workflows.items():
+            if 'phases' in workflow_data:
+                for phase_name, phase_data in workflow_data['phases'].items():
+                    if 'agents' in phase_data:
+                        for agent_config in phase_data['agents']:
+                            agent_name = agent_config.get('name')
+                            if agent_name and agent_name not in agents:
+                                print(f"❌ Workflow {workflow_name} references unknown agent: {agent_name}")
+                                exit(1)
+        
+        print("✅ All agent references in workflows are valid")
+        
+        # Check specialization coverage
+        specializations = set()
+        for agent_name, agent_data in agents.items():
+            if 'specialization' in agent_data:
+                specs = agent_data['specialization'].split(', ')
+                specializations.update(specs)
+        
+        required_specializations = {
+            'strategic-planning', 'tech-leadership', 'product-planning',
+            'system-design', 'requirements-analysis', 'coding', 
+            'test-strategy', 'code-review', 'technical-writing',
+            'data-analysis'
+        }
+        
+        missing_specs = required_specializations - specializations
+        if missing_specs:
+            print(f"⚠️ Missing specializations: {missing_specs}")
+        else:
+            print("✅ All required specializations covered")
+        
+        print("🎉 Agent system compatibility check completed successfully!")
+        EOF
+        
+    - name: Generate System Report
+      run: |
+        echo "📊 Generating agent system report..."
+        
+        # Count components
+        agent_count=$(ls -1 .claude/agents/*.md 2>/dev/null | wc -l)
+        workflow_count=$(ls -1 .claude/workflows/*.yml 2>/dev/null | wc -l)
+        command_count=$(ls -1 .claude/commands/*.md 2>/dev/null | wc -l)
+        context_count=$(ls -1 .claude/contexts/*.yml 2>/dev/null | wc -l)
+        
+        echo "## 🤖 SPEC_SYSTEM Agent Validation Report"
+        echo ""
+        echo "### System Components"
+        echo "- **Agents**: $agent_count"
+        echo "- **Workflows**: $workflow_count"
+        echo "- **Commands**: $command_count"
+        echo "- **Contexts**: $context_count"
+        echo ""
+        echo "### Validation Results"
+        echo "- ✅ All agent definitions are valid"
+        echo "- ✅ All workflow definitions are valid"
+        echo "- ✅ All command definitions are valid"
+        echo "- ✅ All context definitions are valid"
+        echo "- ✅ Agent system compatibility verified"
+        echo ""
+        echo "### System Health"
+        echo "🟢 **HEALTHY** - All components validated successfully"
+        echo ""
+        echo "---"
+        echo "*Report generated on $(date)*"

@@ -1,0 +1,383 @@
+name: Spec Compliance Check
+
+on:
+  push:
+    paths:
+      - 'specs/**'
+  pull_request:
+    paths:
+      - 'specs/**'
+
+jobs:
+  spec-compliance:
+    name: SPEC_SYSTEM Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install validation tools
+      run: |
+        pip install pyyaml jsonschema markdown
+        
+    - name: Validate EARS Requirements Format
+      run: |
+        echo "📋 Validating EARS requirements compliance..."
+        
+        compliance_score=0
+        total_requirements=0
+        
+        # Find all requirements files
+        requirements_files=$(find specs/ -name "requirements.md" 2>/dev/null)
+        
+        if [ -z "$requirements_files" ]; then
+          echo "ℹ️ No requirements.md files found in specs/ directory"
+          exit 0
+        fi
+        
+        for req_file in $requirements_files; do
+          echo "Checking: $req_file"
+          
+          # Count total requirements (lines starting with numbers or bullets)
+          file_requirements=$(grep -E "^[0-9]+\.|^-|^\*" "$req_file" | wc -l)
+          total_requirements=$((total_requirements + file_requirements))
+          
+          # Count EARS-compliant requirements
+          ears_requirements=$(grep -c "WHEN.*THE SYSTEM SHALL" "$req_file" || echo "0")
+          compliance_score=$((compliance_score + ears_requirements))
+          
+          if [ $ears_requirements -eq 0 ]; then
+            echo "⚠️ No EARS-format requirements found in $req_file"
+            echo "   Expected format: 'WHEN [condition], THE SYSTEM SHALL [behavior]'"
+          else
+            echo "✅ Found $ears_requirements EARS-compliant requirements in $req_file"
+          fi
+          
+          # Check for acceptance criteria
+          if ! grep -q -i "acceptance criteria\|definition of done" "$req_file"; then
+            echo "⚠️ Missing acceptance criteria section in $req_file"
+          fi
+          
+          # Check for test scenarios
+          if ! grep -q -i "test scenario\|test case" "$req_file"; then
+            echo "⚠️ Missing test scenarios in $req_file"
+          fi
+        done
+        
+        # Calculate compliance percentage
+        if [ $total_requirements -gt 0 ]; then
+          compliance_percentage=$((compliance_score * 100 / total_requirements))
+        else
+          compliance_percentage=100
+        fi
+        
+        echo ""
+        echo "📊 EARS Compliance Summary:"
+        echo "- Total requirements found: $total_requirements"
+        echo "- EARS-compliant requirements: $compliance_score"
+        echo "- Compliance percentage: $compliance_percentage%"
+        
+        # Set compliance threshold
+        if [ $compliance_percentage -lt 80 ]; then
+          echo "❌ EARS compliance below 80% threshold"
+          echo "💡 Tip: Requirements should follow EARS format:"
+          echo "   'WHEN [trigger condition], THE SYSTEM SHALL [expected behavior]'"
+          exit 1
+        else
+          echo "✅ EARS compliance meets quality standards"
+        fi
+        
+    - name: Validate Spec Structure
+      run: |
+        echo "🏗️ Validating specification structure..."
+        
+        python3 << 'EOF'
+        import os
+        import re
+        
+        def validate_spec_structure():
+            specs_dir = 'specs'
+            if not os.path.exists(specs_dir):
+                print("ℹ️ No specs directory found")
+                return True
+            
+            issues = []
+            
+            # Check for required top-level directories
+            required_dirs = ['features', 'architecture', 'standards']
+            for req_dir in required_dirs:
+                full_path = os.path.join(specs_dir, req_dir)
+                if not os.path.exists(full_path):
+                    issues.append(f"Missing required directory: {full_path}")
+                else:
+                    print(f"✅ Found required directory: {req_dir}")
+            
+            # Validate feature specifications
+            features_dir = os.path.join(specs_dir, 'features')
+            if os.path.exists(features_dir):
+                for feature_name in os.listdir(features_dir):
+                    feature_path = os.path.join(features_dir, feature_name)
+                    if os.path.isdir(feature_path):
+                        print(f"Validating feature: {feature_name}")
+                        
+                        # Check for version directories
+                        version_found = False
+                        for item in os.listdir(feature_path):
+                            if re.match(r'v\d+\.\d+', item):
+                                version_found = True
+                                version_path = os.path.join(feature_path, item)
+                                
+                                # Check for required files in version directory
+                                required_files = [
+                                    'requirements.md',
+                                    'design.md', 
+                                    'tasks.md'
+                                ]
+                                
+                                for req_file in required_files:
+                                    file_path = os.path.join(version_path, req_file)
+                                    if not os.path.exists(file_path):
+                                        issues.append(f"Missing {req_file} in {version_path}")
+                                    else:
+                                        print(f"  ✅ Found {req_file}")
+                        
+                        if not version_found:
+                            issues.append(f"No version directory found in {feature_path}")
+            
+            # Validate architecture documentation
+            arch_dir = os.path.join(specs_dir, 'architecture')
+            if os.path.exists(arch_dir):
+                recommended_files = [
+                    'system-overview.md',
+                    'data-models.md',
+                    'api-design.md'
+                ]
+                
+                for rec_file in recommended_files:
+                    file_path = os.path.join(arch_dir, rec_file)
+                    if os.path.exists(file_path):
+                        print(f"✅ Found architecture doc: {rec_file}")
+                    else:
+                        print(f"ℹ️ Recommended architecture doc not found: {rec_file}")
+            
+            # Validate standards documentation
+            standards_dir = os.path.join(specs_dir, 'standards')
+            if os.path.exists(standards_dir):
+                required_standards = [
+                    'coding-standards.md',
+                    'testing-standards.md',
+                    'documentation-guide.md'
+                ]
+                
+                for std_file in required_standards:
+                    file_path = os.path.join(standards_dir, std_file)
+                    if not os.path.exists(file_path):
+                        issues.append(f"Missing standards document: {std_file}")
+                    else:
+                        print(f"✅ Found standards doc: {std_file}")
+            
+            if issues:
+                print("\n❌ Specification structure issues found:")
+                for issue in issues:
+                    print(f"  - {issue}")
+                return False
+            else:
+                print("\n✅ Specification structure is valid")
+                return True
+        
+        if not validate_spec_structure():
+            exit(1)
+        EOF
+        
+    - name: Validate Traceability
+      run: |
+        echo "🔗 Validating requirement traceability..."
+        
+        python3 << 'EOF'
+        import os
+        import re
+        
+        def extract_requirement_ids(file_path):
+            """Extract requirement IDs from a file"""
+            ids = set()
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Look for requirement IDs like R-001, REQ-001, etc.
+                    matches = re.findall(r'\b(R-\d+|REQ-\d+|[A-Z]+-\d+)\b', content)
+                    ids.update(matches)
+            except Exception as e:
+                print(f"Error reading {file_path}: {e}")
+            return ids
+        
+        def validate_traceability():
+            """Validate that requirements are traced through design and tasks"""
+            specs_dir = 'specs/features'
+            if not os.path.exists(specs_dir):
+                print("ℹ️ No features directory found")
+                return True
+            
+            traceability_issues = []
+            
+            for feature_name in os.listdir(specs_dir):
+                feature_path = os.path.join(specs_dir, feature_name)
+                if not os.path.isdir(feature_path):
+                    continue
+                
+                print(f"Checking traceability for feature: {feature_name}")
+                
+                # Find version directories
+                for version_dir in os.listdir(feature_path):
+                    if re.match(r'v\d+\.\d+', version_dir):
+                        version_path = os.path.join(feature_path, version_dir)
+                        
+                        req_file = os.path.join(version_path, 'requirements.md')
+                        design_file = os.path.join(version_path, 'design.md')
+                        tasks_file = os.path.join(version_path, 'tasks.md')
+                        
+                        # Extract requirement IDs
+                        req_ids = extract_requirement_ids(req_file) if os.path.exists(req_file) else set()
+                        design_ids = extract_requirement_ids(design_file) if os.path.exists(design_file) else set()
+                        task_ids = extract_requirement_ids(tasks_file) if os.path.exists(tasks_file) else set()
+                        
+                        if req_ids:
+                            print(f"  Found {len(req_ids)} requirement IDs in requirements.md")
+                            
+                            # Check if requirements are traced in design
+                            untraced_in_design = req_ids - design_ids
+                            if untraced_in_design:
+                                traceability_issues.append(
+                                    f"Requirements not traced in design for {feature_name}/{version_dir}: {untraced_in_design}"
+                                )
+                            
+                            # Check if requirements are traced in tasks
+                            untraced_in_tasks = req_ids - task_ids
+                            if untraced_in_tasks:
+                                traceability_issues.append(
+                                    f"Requirements not traced in tasks for {feature_name}/{version_dir}: {untraced_in_tasks}"
+                                )
+                            
+                            if not untraced_in_design and not untraced_in_tasks:
+                                print(f"  ✅ All requirements traced through design and tasks")
+                        else:
+                            print(f"  ℹ️ No traceable requirement IDs found")
+            
+            if traceability_issues:
+                print("\n⚠️ Traceability issues found:")
+                for issue in traceability_issues:
+                    print(f"  - {issue}")
+                print("\n💡 Tip: Use requirement IDs like R-001, REQ-001 to enable traceability")
+                return True  # Warning, not error
+            else:
+                print("\n✅ Requirement traceability is good")
+                return True
+        
+        validate_traceability()
+        EOF
+        
+    - name: Generate Compliance Report
+      run: |
+        echo "📋 Generating spec compliance report..."
+        
+        # Create compliance report
+        cat << 'EOF' > spec-compliance-report.md
+        # 📋 SPEC_SYSTEM Compliance Report
+        
+        Generated on: $(date)
+        Commit: ${{ github.sha }}
+        
+        ## 🎯 Compliance Summary
+        
+        This report validates compliance with SPEC_SYSTEM standards:
+        
+        ### ✅ Checks Performed
+        
+        1. **EARS Requirements Format**
+           - Validates that requirements follow EARS format
+           - Checks for acceptance criteria
+           - Verifies test scenarios are present
+        
+        2. **Specification Structure**
+           - Validates directory structure
+           - Checks for required files
+           - Ensures version organization
+        
+        3. **Requirement Traceability**
+           - Traces requirements through design
+           - Validates task mapping
+           - Checks for orphaned requirements
+        
+        ### 📊 Quality Metrics
+        
+        - **EARS Compliance**: Measured automatically
+        - **Structure Compliance**: Directory and file validation
+        - **Traceability Score**: Requirement linkage analysis
+        
+        ### 🎯 Recommendations
+        
+        1. **Use EARS Format**: All requirements should follow the pattern:
+           `WHEN [condition], THE SYSTEM SHALL [behavior]`
+        
+        2. **Maintain Traceability**: Use requirement IDs (R-001, REQ-001) 
+           consistently across requirements, design, and tasks
+        
+        3. **Complete Documentation**: Ensure all required files are present
+           in each feature specification
+        
+        ### 🛠️ Next Steps
+        
+        If compliance issues were found:
+        1. Review the specific issues listed above
+        2. Update specifications to address gaps
+        3. Re-run compliance check
+        4. Consider using `/spec-lint` command for ongoing validation
+        
+        ---
+        
+        *This report was generated automatically by the Spec Compliance workflow*
+        EOF
+        
+    - name: Upload Compliance Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: spec-compliance-report
+        path: spec-compliance-report.md
+        retention-days: 30
+        
+    - name: Comment PR with Compliance Status
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let report = '';
+          try {
+            report = fs.readFileSync('spec-compliance-report.md', 'utf8');
+          } catch (e) {
+            report = '📋 Spec compliance report not available';
+          }
+          
+          const comment = `## 📋 Spec Compliance Check
+          
+          The specification compliance check has completed for this PR.
+          
+          ${report}
+          
+          💡 **Tip**: Use the \`/spec-lint\` command to validate specifications locally before pushing.
+          
+          ---
+          *Automated by SPEC_SYSTEM compliance workflow*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
