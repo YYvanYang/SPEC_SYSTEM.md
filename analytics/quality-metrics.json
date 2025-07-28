@@ -1,0 +1,44 @@
+[
+  {
+    "timestamp": "2024-01-15T10:00:00Z",
+    "defectDensity": {
+      "bugsPerFeature": 0.23,
+      "totalBugs": 7,
+      "totalFeatures": 30,
+      "severity": {
+        "critical": 0,
+        "high": 1,
+        "medium": 3,
+        "low": 3
+      }
+    },
+    "testCoverage": {
+      "percentage": 89.4,
+      "lines": 8940,
+      "covered": 7994,
+      "byComponent": {
+        "agents": 92.1,
+        "workflows": 87.3,
+        "scripts": 85.2
+      }
+    },
+    "securityVulnerabilities": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 5,
+      "total": 7
+    },
+    "codeMaintainability": {
+      "index": 82.7,
+      "complexity": 14.2,
+      "duplication": 3.1,
+      "trend": "improving"
+    },
+    "requirementsClarity": {
+      "earsCompliance": 94.2,
+      "acceptanceCriteriaCoverage": 100.0,
+      "testScenarios": 156
+    }
+  }
+]

@@ -1,11 +1,172 @@
 {
-  "name": "hugo-assets-worker",
-  "main": "worker/src/index.ts",
-  "compatibility_date": "2025-07-25",
-  "assets": {
-    "directory": "./public/",
-    "binding": "ASSETS",
-    "run_worker_first": ["/api/*"] // 仅对 /api/* 先运行 Worker，其余走 assets-first
+  // Cloudflare Workers configuration for SPEC_SYSTEM
+  "name": "spec-system-worker",
+  "main": "worker/index.js",
+  "compatibility_date": "2023-07-10",
+  "node_compat": true,
+  
+  // Environment configuration
+  "env": {
+    "staging": {
+      "name": "spec-system-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "LOG_LEVEL": "debug",
+        "METRICS_ENABLED": "true"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "AGENT_MEMORY",
+          "id": "your-staging-kv-namespace-id"
+        },
+        {
+          "binding": "METRICS_STORE", 
+          "id": "your-staging-metrics-kv-id"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "WORKFLOW_ENGINE",
+            "class_name": "WorkflowEngine"
+          },
+          {
+            "name": "AGENT_ORCHESTRATOR",
+            "class_name": "AgentOrchestrator"
+          }
+        ]
+      }
+    },
+    
+    "production": {
+      "name": "spec-system-prod",
+      "vars": {
+        "ENVIRONMENT": "production",
+        "LOG_LEVEL": "info", 
+        "METRICS_ENABLED": "true"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "AGENT_MEMORY",
+          "id": "your-production-kv-namespace-id"
+        },
+        {
+          "binding": "METRICS_STORE",
+          "id": "your-production-metrics-kv-id"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "WORKFLOW_ENGINE", 
+            "class_name": "WorkflowEngine"
+          },
+          {
+            "name": "AGENT_ORCHESTRATOR",
+            "class_name": "AgentOrchestrator"
+          }
+        ]
+      }
+    }
   },
-  "workers_dev": true
+  
+  // Worker configuration
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  
+  // Resource limits
+  "limits": {
+    "cpu_ms": 30000
+  },
+  
+  // Routes and custom domains
+  "routes": [
+    {
+      "pattern": "api.spec-system.dev/*",
+      "custom_domain": true
+    }
+  ],
+  
+  // Analytics and observability
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+  
+  // Build configuration
+  "build": {
+    "command": "npm run build:worker",
+    "cwd": "worker/",
+    "watch_dir": [
+      "worker/src",
+      "scripts/"
+    ]
+  },
+  
+  // Development configuration
+  "dev": {
+    "port": 8787,
+    "local_protocol": "https"
+  },
+  
+  // Triggers for scheduled tasks
+  "triggers": {
+    "crons": [
+      {
+        "cron": "0 * * * *",
+        "path": "/cron/collect-metrics"
+      },
+      {
+        "cron": "0 0 * * *", 
+        "path": "/cron/cleanup-old-data"
+      },
+      {
+        "cron": "*/15 * * * *",
+        "path": "/cron/health-check"
+      }
+    ]
+  },
+  
+  // R2 bucket bindings for file storage
+  "r2_buckets": [
+    {
+      "binding": "DOCS_STORAGE",
+      "bucket_name": "spec-system-docs"
+    },
+    {
+      "binding": "METRICS_ARCHIVE",
+      "bucket_name": "spec-system-metrics"
+    }
+  ],
+  
+  // Queue bindings for async processing
+  "queues": {
+    "producers": [
+      {
+        "queue": "agent-tasks",
+        "binding": "AGENT_TASK_QUEUE"
+      },
+      {
+        "queue": "metrics-processing",
+        "binding": "METRICS_QUEUE"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "agent-tasks",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ]
+  },
+  
+  // Services for communication between workers
+  "services": [
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "spec-system-auth"
+    }
+  ]
 }

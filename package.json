@@ -1,15 +1,195 @@
 {
-  "name": "spec-pipeline",
-  "private": true,
-  "type": "module",
+  "name": "spec-system",
+  "version": "1.0.0",
+  "description": "AI-Native Spec-Driven Development System with specialized agents and intelligent workflows",
+  "main": "scripts/index.js",
   "scripts": {
-    "spec:lint": "node scripts/spec-lint.js",
-    "trace:check": "node scripts/trace-check.js",
-    "perm:check": "node scripts/permission-check.js",
-    "test": "hugo --gc --minify -e production"
+    "start": "node scripts/index.js",
+    "dev": "nodemon scripts/index.js",
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=test/unit",
+    "test:integration": "jest --testPathPattern=test/integration",
+    "test:e2e": "jest --testPathPattern=test/e2e",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint scripts/ --ext .js,.ts",
+    "lint:fix": "eslint scripts/ --ext .js,.ts --fix",
+    "format": "prettier --write scripts/**/*.{js,ts,json,md}",
+    "type-check": "tsc --noEmit",
+    "docs:generate": "npm run docs:api && npm run docs:architecture",
+    "docs:api": "apidoc -i scripts/ -o docs/api/",
+    "docs:architecture": "mmdc -i specs/architecture/diagrams/ -o docs/diagrams/",
+    "docs:serve": "http-server docs/ -p 8080",
+    "metrics:collect": "node scripts/metrics-collector.js",
+    "metrics:dashboard": "node scripts/analytics-dashboard.js",
+    "agents:validate": "node scripts/validate-agents.js",
+    "workflows:validate": "node scripts/validate-workflows.js",
+    "quality:check": "npm run lint && npm run type-check && npm run test:unit",
+    "quality:full": "npm run quality:check && npm run test:integration && npm run test:e2e",
+    "build": "npm run quality:full && npm run docs:generate",
+    "deploy:staging": "wrangler publish --env staging",
+    "deploy:production": "wrangler publish --env production",
+    "setup": "npm install && npm run agents:validate && npm run workflows:validate",
+    "clean": "rm -rf node_modules/ coverage/ docs/api/ docs/diagrams/",
+    "update:deps": "npm update && npm audit fix"
+  },
+  "keywords": [
+    "ai-native",
+    "spec-driven",
+    "development",
+    "agents",
+    "workflows",
+    "quality-gates",
+    "automation",
+    "claude-code"
+  ],
+  "author": "SPEC_SYSTEM Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/spec-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/spec-system/issues"
+  },
+  "homepage": "https://github.com/your-org/spec-system#readme",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "dotenv": "^16.3.1",
+    "winston": "^3.10.0",
+    "redis": "^4.6.7",
+    "pg": "^8.11.1",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.1",
+    "joi": "^17.9.2",
+    "rate-limiter-flexible": "^2.4.2",
+    "uuid": "^9.0.0",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21",
+    "axios": "^1.4.0",
+    "yaml": "^2.3.1",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1",
+    "boxen": "^5.1.2"
   },
   "devDependencies": {
-    "globby": "^14.0.2",
-    "markdown-it": "^14.1.0"
+    "@types/node": "^20.4.2",
+    "@types/express": "^4.17.17",
+    "@types/cors": "^2.8.13",
+    "@types/morgan": "^1.9.4",
+    "@types/compression": "^1.7.2",
+    "@types/bcrypt": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/uuid": "^9.0.2",
+    "@types/lodash": "^4.14.195",
+    "@types/jest": "^29.5.3",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
+    "@typescript-eslint/parser": "^6.1.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6",
+    "jest": "^29.6.1",
+    "jest-environment-node": "^29.6.1",
+    "supertest": "^6.3.3",
+    "nodemon": "^3.0.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "apidoc": "^1.2.0",
+    "@mermaid-js/mermaid-cli": "^10.3.0",
+    "http-server": "^14.1.1",
+    "wrangler": "^3.1.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && npm run quality:check",
+      "pre-push": "npm run test:integration"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    },
+    "collectCoverageFrom": [
+      "scripts/**/*.{js,ts}",
+      "!scripts/**/*.test.{js,ts}",
+      "!scripts/**/*.spec.{js,ts}",
+      "!scripts/tests/**",
+      "!scripts/node_modules/**"
+    ],
+    "testMatch": [
+      "**/test/**/*.test.{js,ts}",
+      "**/test/**/*.spec.{js,ts}"
+    ]
+  },
+  "prettier": {
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "printWidth": 100,
+    "tabWidth": 2,
+    "useTabs": false
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "prettier"
+    ],
+    "env": {
+      "node": true,
+      "es2021": true,
+      "jest": true
+    },
+    "rules": {
+      "no-console": "warn",
+      "no-debugger": "error",
+      "no-unused-vars": "error",
+      "prefer-const": "error",
+      "no-var": "error",
+      "eqeqeq": "error",
+      "curly": "error",
+      "prettier/prettier": "error"
+    }
   }
 }

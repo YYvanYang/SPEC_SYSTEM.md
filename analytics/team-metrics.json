@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2024-01-15T10:00:00Z",
+    "agentCollaborationEfficiency": {
+      "efficiency": 0.91,
+      "totalHandoffs": 47,
+      "successfulHandoffs": 43,
+      "bottlenecks": [
+        {
+          "agent": "requirements-engineer",
+          "delay": 1.2,
+          "reason": "Clarification requests"
+        }
+      ]
+    },
+    "contextSwitchingFrequency": {
+      "averagePerAgent": 3.2,
+      "byAgent": {
+        "steering-architect": 2.1,
+        "feature-planner": 4.3,
+        "design-architect": 3.8,
+        "requirements-engineer": 2.9,
+        "implementation-specialist": 3.5,
+        "test-strategist": 3.1,
+        "quality-guardian": 2.7,
+        "documentation-curator": 3.4,
+        "metrics-analyst": 2.8
+      }
+    },
+    "knowledgeTransferEffectiveness": {
+      "docsAccessedPerQuestion": 2.3,
+      "knowledgeGaps": [
+        "OAuth implementation patterns",
+        "Performance optimization techniques"
+      ],
+      "documentationUsage": 0.78
+    },
+    "decisionReversalRate": {
+      "rate": 0.034,
+      "totalDecisions": 89,
+      "reversedDecisions": 3,
+      "stabilityScore": 96.6
+    },
+    "agentPerformance": {
+      "steering-architect": {
+        "tasksCompleted": 12,
+        "avgDuration": 45.2,
+        "qualityScore": 91.3
+      },
+      "feature-planner": {
+        "tasksCompleted": 8,
+        "avgDuration": 38.7,
+        "qualityScore": 88.9
+      },
+      "implementation-specialist": {
+        "tasksCompleted": 23,
+        "avgDuration": 67.4,
+        "qualityScore": 85.1
+      }
+    }
+  }
+]

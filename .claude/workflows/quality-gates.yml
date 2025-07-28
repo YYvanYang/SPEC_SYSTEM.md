@@ -1,0 +1,162 @@
+name: quality-gates
+description: Automated quality pipeline with agent-driven checks
+
+gates:
+  pre-implementation:
+    description: Validate readiness before coding begins
+    checks:
+      - name: requirements-completeness
+        agent: requirements-engineer
+        criteria:
+          - all-requirements-ears-format
+          - acceptance-criteria-defined
+          - edge-cases-identified
+          - negative-scenarios-covered
+        threshold: 100%
+        
+      - name: design-review-approval
+        agent: design-architect
+        criteria:
+          - component-diagrams-present
+          - api-specifications-complete
+          - integration-patterns-defined
+          - adr-documented
+        threshold: 100%
+        
+      - name: test-strategy-defined
+        agent: test-strategist
+        criteria:
+          - test-scenarios-mapped-to-requirements
+          - coverage-targets-set
+          - automation-strategy-defined
+          - performance-criteria-established
+        threshold: 100%
+        
+    actions:
+      on-pass: proceed-to-implementation
+      on-fail: block-and-notify-assignee
+
+  during-implementation:
+    description: Continuous monitoring during development
+    checks:
+      - name: continuous-testing
+        agent: test-strategist
+        frequency: on-commit
+        criteria:
+          - unit-tests-passing
+          - integration-tests-passing
+          - regression-tests-passing
+        threshold: 100%
+        
+      - name: security-scanning
+        agent: quality-guardian
+        frequency: daily
+        criteria:
+          - no-critical-vulnerabilities
+          - no-secrets-in-code
+          - security-patterns-followed
+        threshold: 100%
+        
+      - name: performance-monitoring
+        agent: metrics-analyst
+        frequency: on-commit
+        criteria:
+          - build-time-within-limits
+          - memory-usage-acceptable
+          - response-time-benchmarks
+        threshold: 95%
+        
+    actions:
+      on-fail: immediate-notification
+
+  pre-merge:
+    description: Comprehensive review before merge
+    checks:
+      - name: comprehensive-review
+        agent: quality-guardian
+        criteria:
+          - code-quality-standards-met
+          - security-review-passed
+          - performance-impact-assessed
+          - maintainability-verified
+        threshold: 100%
+        
+      - name: acceptance-criteria-validation
+        agent: test-strategist
+        criteria:
+          - all-acceptance-criteria-tested
+          - edge-cases-validated
+          - error-conditions-handled
+        threshold: 100%
+        
+      - name: regression-testing
+        agent: test-strategist
+        criteria:
+          - full-regression-suite-passed
+          - no-breaking-changes
+          - backward-compatibility-maintained
+        threshold: 100%
+        
+      - name: documentation-completeness
+        agent: documentation-curator
+        criteria:
+          - api-docs-updated
+          - user-guides-current
+          - changelog-entries-added
+          - examples-working
+        threshold: 100%
+        
+    actions:
+      on-pass: approve-merge
+      on-fail: block-merge-request-feedback
+
+  post-merge:
+    description: Post-deployment validation and metrics
+    checks:
+      - name: deployment-verification
+        agent: implementation-specialist
+        criteria:
+          - deployment-successful
+          - health-checks-passing
+          - monitoring-alerts-clear
+        threshold: 100%
+        
+      - name: metrics-collection
+        agent: metrics-analyst
+        criteria:
+          - delivery-metrics-updated
+          - quality-indicators-tracked
+          - performance-baselines-established
+        threshold: 100%
+        
+      - name: documentation-sync
+        agent: documentation-curator
+        criteria:
+          - live-docs-updated
+          - api-references-current
+          - examples-validated
+        threshold: 100%
+        
+    actions:
+      on-complete: update-delivery-dashboard
+
+escalation:
+  quality-gate-failure:
+    - notify-assignee-immediately
+    - escalate-to-team-lead-after-4h
+    - escalate-to-steering-architect-after-24h
+    
+  critical-security-issue:
+    - block-all-deployments
+    - notify-security-team
+    - escalate-to-cto
+    
+  performance-regression:
+    - rollback-if-in-production
+    - notify-performance-team
+    - schedule-immediate-review
+
+reporting:
+  daily-quality-summary: team-channel
+  weekly-metrics-report: stakeholders
+  monthly-trend-analysis: leadership

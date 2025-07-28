@@ -1,0 +1,107 @@
+name: task-context
+description: Task-specific context for implementation agents
+scope: single-task
+
+agents:
+  - implementation-specialist
+  - quality-guardian
+
+context-includes:
+  requirements:
+    - task-requirements.md
+    - acceptance-criteria.md
+    - definition-of-done.md
+    - edge-cases.md
+    
+  design-specs:
+    - component-design.md
+    - api-specifications.md
+    - data-models.md
+    - integration-patterns.md
+    
+  codebase-context:
+    - existing-implementations/similar-features
+    - shared-utilities/
+    - test-helpers/
+    - configuration-files/
+    
+  quality-standards:
+    - coding-standards.md
+    - security-guidelines.md
+    - performance-requirements.md
+    - testing-requirements.md
+
+context-boundaries:
+  focused-scope:
+    - current-task-files-only
+    - directly-related-dependencies
+    - shared-utilities-in-use
+    - relevant-test-files
+    
+  avoid-scope-creep:
+    - unrelated-features
+    - deprecated-code
+    - experimental-branches
+    - future-enhancements
+
+implementation-guidance:
+  patterns-to-follow:
+    - established-code-patterns
+    - approved-libraries
+    - existing-error-handling
+    - logging-conventions
+    
+  patterns-to-avoid:
+    - deprecated-approaches
+    - known-anti-patterns
+    - performance-bottlenecks
+    - security-vulnerabilities
+
+change-constraints:
+  minimal-changes-principle:
+    - modify-only-necessary-files
+    - preserve-existing-interfaces
+    - maintain-backward-compatibility
+    - avoid-architectural-changes
+    
+  quality-requirements:
+    - comprehensive-error-handling
+    - appropriate-logging
+    - input-validation
+    - resource-cleanup
+
+collaboration-with-quality-guardian:
+  review-checkpoints:
+    - implementation-complete
+    - tests-passing
+    - documentation-updated
+    
+  shared-context:
+    - code-changes-diff
+    - test-results
+    - performance-impact
+    - security-considerations
+
+feedback-loops:
+  implementation-to-requirements:
+    trigger: requirement-ambiguity-found
+    action: request-clarification
+    
+  implementation-to-design:
+    trigger: design-constraint-violation
+    action: propose-design-adjustment
+    
+  quality-review-to-implementation:
+    trigger: quality-issue-found
+    action: iterative-improvement
+
+context-cleanup:
+  on-task-completion:
+    - archive-implementation-notes
+    - update-knowledge-base
+    - clear-temporary-context
+    
+  on-task-failure:
+    - preserve-debugging-context
+    - document-blocking-issues
+    - maintain-for-retry

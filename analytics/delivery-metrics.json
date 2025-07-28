@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2024-01-15T10:00:00Z",
+    "featureCycleTime": {
+      "average": 5.2,
+      "p50": 4.8,
+      "p90": 8.1,
+      "p99": 12.3,
+      "trend": "improving"
+    },
+    "throughput": {
+      "7days": 3,
+      "30days": 12,
+      "90days": 35
+    },
+    "leadTime": {
+      "average": 7.4,
+      "p50": 6.9,
+      "p90": 11.2
+    },
+    "deploymentFrequency": {
+      "daily": 2.1,
+      "weekly": 14.7
+    },
+    "firstPassSuccessRate": {
+      "rate": 0.87,
+      "total": 15,
+      "successful": 13,
+      "trend": "stable"
+    }
+  }
+]

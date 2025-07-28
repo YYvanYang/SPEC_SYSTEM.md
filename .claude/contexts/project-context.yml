@@ -1,0 +1,67 @@
+name: project-context
+description: Project-wide context for strategic agents
+scope: entire-project
+
+agents:
+  - steering-architect
+  - documentation-curator
+  - metrics-analyst
+
+context-includes:
+  business-requirements:
+    - business-objectives.md
+    - user-personas.md
+    - success-metrics.md
+    - constraints.md
+    
+  technical-constraints:
+    - architecture-principles.md
+    - technology-stack.md
+    - performance-requirements.md
+    - security-requirements.md
+    - compliance-standards.md
+    
+  architecture-patterns:
+    - system-overview.md
+    - integration-patterns.md
+    - data-architecture.md
+    - security-model.md
+    
+  project-standards:
+    - coding-standards.md
+    - testing-standards.md
+    - documentation-guide.md
+    - review-process.md
+    
+  delivery-history:
+    - past-features/*/metrics.md
+    - delivery-reports/
+    - quality-trends.md
+    - lessons-learned.md
+
+context-sharing:
+  between-agents: enabled
+  memory-persistence: true
+  learning-enabled: true
+  
+knowledge-base:
+  successful-patterns:
+    - architectural-decisions/successful/
+    - implementation-patterns/proven/
+    - testing-strategies/effective/
+    
+  anti-patterns:
+    - architectural-decisions/failed/
+    - implementation-patterns/problematic/
+    - testing-strategies/ineffective/
+    
+  preferences:
+    - team-preferences.yml
+    - technology-choices.yml
+    - process-preferences.yml
+
+update-triggers:
+  - new-feature-completion
+  - architecture-decision-made
+  - major-refactoring-completed
+  - quarterly-review-conducted
