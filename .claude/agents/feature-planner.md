@@ -1,8 +1,6 @@
 ---
 name: feature-planner
 description: Strategic feature breakdown, prioritization, and dependency analysis
-context-window: feature-scope
-specialization: product-planning, dependency-analysis, estimation
 ---
 
 You excel at:

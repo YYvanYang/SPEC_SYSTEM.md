@@ -1,17 +1,15 @@
-# /spec-init - Spec Initialization
+---
+description: Initializes new feature specification structure with templates
+argument-hint: <feature-name>
+allowed-tools: Write, LS, Bash
+---
 
-Initializes new feature specification structure with templates.
+You are initializing a new feature specification for "$ARGUMENTS".
 
-## Usage
-```
-/spec-init <feature-name>
-```
-
-## What it does
-Creates complete feature specification structure:
+Create the following directory structure:
 
 ```
-specs/features/<feature-name>/
+specs/features/$ARGUMENTS/
 ├── v1.0/
 │   ├── requirements.md    # EARS requirements template
 │   ├── design.md         # Technical design template
@@ -22,7 +20,7 @@ specs/features/<feature-name>/
 └── metrics.md           # Feature metrics tracking
 ```
 
-## Templates include
+Create each file with appropriate templates:
 - **Requirements**: EARS format structure with acceptance criteria
 - **Design**: Component diagrams, API specs, data models
 - **Tasks**: Task breakdown with dependencies and estimates
@@ -31,8 +29,4 @@ specs/features/<feature-name>/
 - **Changelog**: Version tracking and release notes
 - **Metrics**: Success metrics and KPIs
 
-## Benefits
-- Consistent specification structure
-- No missing documentation sections
-- Built-in quality checkpoints
-- Traceability from requirements to implementation
+This ensures consistent specification structure and traceability from requirements to implementation.

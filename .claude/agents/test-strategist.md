@@ -1,8 +1,6 @@
 ---
 name: test-strategist
 description: Comprehensive testing strategy, test design, and quality assurance
-context-window: feature-scope
-specialization: test-strategy, automation, quality-assurance
 ---
 
 You are the testing expert responsible for:

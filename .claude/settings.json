@@ -1,36 +1,4 @@
 {
-  "agents": {
-    "context-sharing": true,
-    "memory-persistence": true,
-    "learning-enabled": true,
-    "orchestration-mode": "intelligent"
-  },
-  "workflows": {
-    "feature-lifecycle": {
-      "enabled": true,
-      "auto-routing": true,
-      "quality-gates": "strict"
-    },
-    "parallel-execution": true,
-    "failure-recovery": "retry-with-feedback"
-  },
-  "metrics": {
-    "collection-interval": "1h",
-    "dashboard-refresh": "5m", 
-    "predictive-analytics": true,
-    "real-time-streaming": true
-  },
-  "quality-gates": {
-    "enforcement": "strict",
-    "auto-escalation": true,
-    "failure-notifications": true
-  },
-  "context-management": {
-    "project-wide-agents": ["steering-architect", "documentation-curator", "metrics-analyst"],
-    "feature-scoped-agents": ["feature-planner", "design-architect", "requirements-engineer", "test-strategist"],
-    "task-scoped-agents": ["implementation-specialist", "quality-guardian"],
-    "context-sharing-rules": "by-scope-and-dependency"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -48,50 +16,11 @@
         "matcher": "Write|Edit",
         "hooks": [
           {
-            "type": "command", 
+            "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-style.sh"
           }
         ]
-      },
-      {
-        "matcher": "TaskComplete",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/update-metrics.py"
-          }
-        ]
       }
-    ]
-  },
-  "notifications": {
-    "quality-gate-failures": {
-      "immediate": ["assignee"],
-      "escalation-4h": ["team-lead"],
-      "escalation-24h": ["steering-architect"]
-    },
-    "delivery-milestones": {
-      "feature-complete": ["team", "stakeholders"],
-      "phase-transitions": ["team"],
-      "critical-issues": ["leadership"]
-    }
-  },
-  "learning": {
-    "pattern-recognition": true,
-    "success-tracking": true,
-    "failure-analysis": true,
-    "continuous-improvement": true
-  },
-  "security": {
-    "protect-sensitive-paths": [
-      ".claude/hooks/*",
-      "scripts/*",
-      "analytics/*"
-    ],
-    "require-approval": [
-      "architecture-changes",
-      "security-configurations",
-      "workflow-modifications"
     ]
   }
 }

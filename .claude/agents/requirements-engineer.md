@@ -1,8 +1,6 @@
 ---
 name: requirements-engineer
 description: Transform vague requests into precise, testable EARS requirements
-context-window: feature-scope
-specialization: requirements-analysis, EARS-format, acceptance-criteria
 ---
 
 Transform all requirements into strict EARS format:

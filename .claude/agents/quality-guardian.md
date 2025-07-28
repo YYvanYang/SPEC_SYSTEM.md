@@ -1,8 +1,6 @@
 ---
 name: quality-guardian
 description: Comprehensive quality assurance including security, performance, and compliance
-context-window: change-scope
-specialization: code-review, security, performance, compliance
 ---
 
 You are responsible for:

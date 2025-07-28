@@ -1,59 +1,31 @@
-# /review-ready - Comprehensive Review
+---
+description: Triggers comprehensive multi-agent review process before merge
+argument-hint: [feature-name]
+allowed-tools: Task, Bash, Read, Glob, Grep
+---
 
-Triggers comprehensive multi-agent review process before merge.
+You are conducting a comprehensive review for "$ARGUMENTS" before merge.
 
-## Usage
-```
-/review-ready [feature-name]
-```
+Execute parallel review processes:
 
-## Workflow
-Executes parallel review processes:
+**Automated Quality Checks:**
+- Run lint checks and code formatting
+- Execute unit and integration tests
+- Perform security vulnerability scanning
+- Run performance regression testing
 
-### Automated Quality Checks
-- Lint checks and code formatting
-- Unit and integration test execution
-- Security vulnerability scanning
-- Performance regression testing
+**Agent Reviews:**
+1. Use quality-guardian for deep quality review
+2. Use metrics-analyst for delivery metrics tracking
+3. Use documentation-curator for documentation verification
+4. Use test-strategist for test completeness review
 
-### Agent Reviews
+**Quality Gates (all must pass):**
+- All automated tests pass
+- Security scan shows no critical issues
+- Performance benchmarks within thresholds
+- Code quality meets standards
+- Documentation is complete and accurate
+- All requirements have test coverage
 
-1. **@quality-guardian** - Deep quality review
-   - Code quality and security analysis
-   - Performance impact assessment
-   - Compliance and governance verification
-   - Risk assessment and mitigation
-
-2. **@metrics-analyst** - Delivery metrics tracking
-   - Tracks cycle time and throughput
-   - Measures quality indicators
-   - Analyzes team collaboration patterns
-   - Updates delivery dashboards
-
-3. **@documentation-curator** - Documentation verification
-   - Validates documentation completeness
-   - Ensures consistency across all docs
-   - Checks for broken links and references
-   - Verifies examples and code samples
-
-4. **@test-strategist** - Test completeness review
-   - Validates test coverage against requirements
-   - Ensures all edge cases are covered
-   - Reviews test quality and effectiveness
-   - Confirms acceptance criteria validation
-
-## Quality Gates
-All must pass before merge approval:
-
-- [ ] All automated tests pass
-- [ ] Security scan shows no critical issues
-- [ ] Performance benchmarks within thresholds
-- [ ] Code quality meets standards
-- [ ] Documentation is complete and accurate
-- [ ] All requirements have test coverage
-
-## Output
-- Comprehensive review report
-- Quality gate status
-- Recommendations for improvement
-- Merge approval or blocking issues
+Provide comprehensive review report, quality gate status, and merge approval recommendation.

@@ -1,49 +1,38 @@
-# /analytics-dashboard - Metrics Visualization
+---
+description: Generates real-time analytics dashboard for delivery and quality metrics
+argument-hint: [time-range]
+allowed-tools: Read, Bash, Glob, Grep
+---
 
-Generates real-time analytics dashboard for delivery and quality metrics.
+You are generating an analytics dashboard for time range "$ARGUMENTS".
 
-## Usage
-```
-/analytics-dashboard [time-range]
-```
+Create dashboard with the following sections:
 
-## Dashboard Sections
+**Delivery Metrics:**
+- Cycle Time: Time from spec to production
+- Throughput: Features delivered per sprint
+- Lead Time: Idea to customer delivery
+- Deployment Frequency: Release cadence
+- MTTR: Mean time to recovery
 
-### Delivery Metrics
-- **Cycle Time**: Time from spec to production
-- **Throughput**: Features delivered per sprint
-- **Lead Time**: Idea to customer delivery
-- **Deployment Frequency**: Release cadence
-- **MTTR**: Mean time to recovery
+**Quality Indicators:**
+- First-pass Success Rate: No rework needed
+- Defect Density: Bugs per feature
+- Test Coverage: Code and requirement coverage
+- Security Vulnerabilities: Critical/High/Medium counts
+- Technical Debt: Maintainability trends
 
-### Quality Indicators
-- **First-pass Success Rate**: No rework needed
-- **Defect Density**: Bugs per feature
-- **Test Coverage**: Code and requirement coverage  
-- **Security Vulnerabilities**: Critical/High/Medium counts
-- **Technical Debt**: Maintainability trends
+**Team Performance:**
+- Agent Collaboration Efficiency: Cross-agent workflows
+- Context Switching: Task focus patterns
+- Knowledge Transfer: Documentation quality
+- Decision Reversal Rate: Stability of decisions
+- Spec Quality Score: Requirements completeness
 
-### Team Performance
-- **Agent Collaboration Efficiency**: Cross-agent workflows
-- **Context Switching**: Task focus patterns
-- **Knowledge Transfer**: Documentation quality
-- **Decision Reversal Rate**: Stability of decisions
-- **Spec Quality Score**: Requirements completeness
+**Business Impact:**
+- Feature Adoption: Usage metrics post-release
+- User Satisfaction: Feedback and ratings
+- Business Value: ROI and impact metrics
+- Customer Success: Support ticket trends
 
-### Business Impact
-- **Feature Adoption**: Usage metrics post-release
-- **User Satisfaction**: Feedback and ratings
-- **Business Value**: ROI and impact metrics
-- **Customer Success**: Support ticket trends
-
-## Visualizations
-- Time series charts for trends
-- Heat maps for quality patterns
-- Dependency graphs for bottlenecks
-- Predictive analytics for risks
-
-## Alerts & Insights
-- Performance degradation warnings
-- Quality threshold breaches
-- Delivery risk predictions
-- Improvement recommendations
+Include visualizations, alerts for threshold breaches, and improvement recommendations.

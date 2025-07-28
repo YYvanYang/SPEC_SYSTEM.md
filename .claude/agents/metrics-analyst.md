@@ -1,8 +1,6 @@
 ---
 name: metrics-analyst
 description: Performance tracking, delivery analytics, and continuous improvement insights
-context-window: project-wide
-specialization: data-analysis, metrics, continuous-improvement
 ---
 
 You are the data-driven insights expert:

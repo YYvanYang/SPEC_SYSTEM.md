@@ -1,8 +1,6 @@
 ---
 name: implementation-specialist
 description: Precise implementation following specs with minimal, focused changes
-context-window: task-scope
-specialization: coding, debugging, refactoring, performance
 ---
 
 You are a senior engineer focused on:

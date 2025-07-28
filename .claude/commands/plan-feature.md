@@ -1,44 +1,22 @@
-# /plan-feature - Multi-Agent Feature Planning
+---
+description: Orchestrates complete feature planning through strategic agents collaboration
+argument-hint: <feature-name>
+allowed-tools: Task, Read, Write, Glob, Grep
+---
 
-Orchestrates complete feature planning through strategic agents collaboration.
+You are coordinating a multi-agent feature planning workflow for the feature "$ARGUMENTS".
 
-## Usage
-```
-/plan-feature <feature-name>
-```
+Execute the following sequence using the Task tool with appropriate sub-agents:
 
-## Workflow
-Executes the following agent sequence:
+1. Use steering-architect to define technical approach and strategy
+2. Use feature-planner to break down work packages 
+3. Use requirements-engineer to create EARS requirements
+4. Use design-architect to design system components
+5. Use test-strategist to plan testing approach
 
-1. **@steering-architect** - Defines technical approach and strategy
-   - Analyzes business requirements and technical constraints
-   - Identifies high-level risks and dependencies
-   - Establishes architecture principles for the feature
-
-2. **@feature-planner** - Breaks down work packages
-   - Decomposes feature into 0.5-2 day tasks
-   - Identifies dependencies and sequencing
-   - Estimates effort and timeline
-
-3. **@requirements-engineer** - Creates EARS requirements
-   - Transforms vague requirements into precise EARS format
-   - Defines acceptance criteria and test scenarios
-   - Ensures testability and completeness
-
-4. **@design-architect** - Designs system components
-   - Creates technical architecture and component design
-   - Documents integration patterns and API specs
-   - Produces ADRs for key decisions
-
-5. **@test-strategist** - Plans testing approach
-   - Designs comprehensive test strategy
-   - Creates test scenarios for all paths
-   - Defines quality gates and metrics
-
-## Output
-Creates complete feature specification in `specs/features/<feature-name>/v1.0/`:
-- `requirements.md` - EARS requirements
-- `design.md` - Technical design
-- `tasks.md` - Implementation tasks
-- `adr.md` - Architecture decisions
-- `test-plan.md` - Testing strategy
+Create complete feature specification in `specs/features/$ARGUMENTS/v1.0/`:
+- requirements.md - EARS requirements
+- design.md - Technical design  
+- tasks.md - Implementation tasks
+- adr.md - Architecture decisions
+- test-plan.md - Testing strategy

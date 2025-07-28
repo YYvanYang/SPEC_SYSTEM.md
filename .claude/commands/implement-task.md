@@ -1,46 +1,31 @@
-# /implement-task - Implementation Workflow
+---
+description: Executes structured implementation workflow with quality assurance
+argument-hint: <task-id>
+allowed-tools: Task, Read, Write, Edit, MultiEdit, Bash, Glob, Grep
+---
 
-Executes structured implementation workflow with quality assurance.
+You are executing an implementation workflow for task "$ARGUMENTS".
 
-## Usage
-```
-/implement-task <task-id>
-```
+Execute the following sequence using the Task tool with appropriate sub-agents:
 
-## Workflow
-Executes the following agent sequence:
+1. Use implementation-specialist to code the solution
+   - Read and understand complete requirement
+   - Design minimal solution meeting all criteria
+   - Implement with proper error handling and logging
 
-1. **@implementation-specialist** - Codes the solution
-   - Reads and understands complete requirement
-   - Designs minimal solution meeting all criteria
-   - Implements with proper error handling and logging
-   - Makes targeted, minimal changes
+2. Use test-strategist to run comprehensive tests
+   - Execute unit, integration, and e2e tests
+   - Validate against acceptance criteria
+   - Report test coverage and quality metrics
 
-2. **@test-strategist** - Runs comprehensive tests
-   - Executes unit, integration, and e2e tests
-   - Validates against acceptance criteria
-   - Reports test coverage and quality metrics
-   - Identifies any test failures or gaps
+3. Use quality-guardian to review for quality/security
+   - Perform code quality and security review
+   - Analyze performance impact
+   - Provide MUST/SHOULD/NICE feedback
 
-3. **@quality-guardian** - Reviews for quality/security
-   - Performs code quality and security review
-   - Analyzes performance impact
-   - Checks compliance and governance
-   - Provides MUST/SHOULD/NICE feedback
+4. Use documentation-curator to update documentation
+   - Update relevant technical documentation
+   - Ensure consistency across all docs
+   - Validate documentation against implementation
 
-4. **@documentation-curator** - Updates documentation
-   - Updates relevant technical documentation
-   - Ensures consistency across all docs
-   - Validates documentation against implementation
-   - Updates API specs and runbooks
-
-## Prerequisites
-- Task must exist in `specs/features/<feature>/tasks.md`
-- Requirements must be in EARS format
-- Design specifications must be complete
-
-## Output
-- Implemented code changes
-- Updated test suite
-- Quality review report
-- Updated documentation
+Prerequisites: Task must exist in specs/features/<feature>/tasks.md with EARS requirements and complete design specifications.
