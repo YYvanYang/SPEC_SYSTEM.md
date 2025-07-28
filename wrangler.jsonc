@@ -1,0 +1,11 @@
+{
+  "name": "hugo-assets-worker",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2025-07-25",
+  "assets": {
+    "directory": "./public/",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"] // 仅对 /api/* 先运行 Worker，其余走 assets-first
+  },
+  "workers_dev": true
+}

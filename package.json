@@ -1,0 +1,15 @@
+{
+  "name": "spec-pipeline",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spec:lint": "node scripts/spec-lint.js",
+    "trace:check": "node scripts/trace-check.js",
+    "perm:check": "node scripts/permission-check.js",
+    "test": "hugo --gc --minify -e production"
+  },
+  "devDependencies": {
+    "globby": "^14.0.2",
+    "markdown-it": "^14.1.0"
+  }
+}
